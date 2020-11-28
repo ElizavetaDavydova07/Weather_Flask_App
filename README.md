@@ -9,6 +9,6 @@ This project will be used to demonstrate how it works in Kubernetes.
 - MySQL - Database
 - Kubernetes - Container-orchestration system
 ### Run this app with the command:
-'''
+```
 docker-compose up
-'''
+```
