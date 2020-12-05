@@ -2,7 +2,7 @@
 This project will be used to demonstrate how it works in Kubernetes.
 
 ###microservice scheme
-![alt text](https://github.com/ElizavetaDavydova07/Weather_Flask_App/blob/main/scheme.JPG)
+![alt text](https://github.com/ElizavetaDavydova07/Weather_Flask_App/blob/main/scheme.png)
 
 ### Built With:
 - Docker - Deployment model
