@@ -1,0 +1,101 @@
+# MySQL Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mysql-database
+---
+# Persistent volume for mysql
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  namespace: mysql-database
+  name: mysql-pv-volume
+  labels:
+    type: local
+    app: mysql
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 3Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/opt/mysql-pvc/"
+---
+# Persistent volume claim
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  namespace: mysql-database
+  name: mysql-pv-claim
+  labels:
+    app: mysql
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 3Gi
+---
+# MySQL Config map
+apiVersion: v1 
+kind: ConfigMap
+metadata:
+  namespace: mysql-database
+  name: mysql-config
+  labels:
+    app: mysql
+data:
+  MYSQL_DATABASE: weather-app
+  MYSQL_USER: weather
+  MYSQL_PASSWORD: weather-password
+  MYSQL_ROOT_PASSWORD: root
+---
+# MySQL Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: mysql-database
+spec:
+  selector:
+    matchLabels:
+      app: mysql
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:latest
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 3306
+          envFrom:
+            - configMapRef:
+                name: mysql-config
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: mysql-db
+      volumes:
+        - name: mysql-db
+          persistentVolumeClaim:
+            claimName: mysql-pv-claim
+---
+# MySQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: mysql-database
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  type: NodePort
+  ports:
+   - port: 3306
+  selector:
+   app: mysql

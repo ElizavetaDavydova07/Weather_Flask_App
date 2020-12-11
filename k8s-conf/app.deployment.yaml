@@ -1,0 +1,66 @@
+# Application Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: weather
+---
+# Application deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-app
+  namespace: weather
+spec:
+  selector:
+   matchLabels:
+    app: weather-app
+  replicas: 1
+  template:
+    metadata:
+      name: weather-app
+      labels:
+        app: weather-app
+    spec:
+      containers:
+      - name: weather-app
+        image: localhost:32000/weather/app:1.0.0 
+        env:
+        - name: MYSQL_URI
+          value: "mysql+mysqlconnector://weather:weather-password@mysql.mysql-database.svc.cluster.local:3306/weather-app"
+        ports:
+          - containerPort: 8000
+---
+# Service configuration
+apiVersion: v1 
+kind: Service
+metadata:
+  namespace: weather
+  name: weather-service
+  labels:
+    app: weather-app
+spec:
+  type: LoadBalancer
+  ports:
+   - port: 8000
+  selector:
+   app: weather-app
+---
+# Ingress configuration
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: weather-app-ingress
+  namespace: weather
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: weather-service
+            port:
+              number: 8000
